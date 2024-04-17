@@ -10,23 +10,28 @@ const userSchema = new mongoose.Schema({
     email:{
         type: String,
         required:[true, 'valid email address is required'],
-        unique:true
+        unique:[true, "Email already exist provide new email or LogIn"],
+        lowercase:true,
+        trim:true
     },
     password:{
         type:String,
-        required:[true, 'Please set strong password']
+        required:[true, 'Please set strong password'],
+        minlength:[8, "Password must be atleast 8 character long"]
     },
 
     confirmPassword:{
-        type:String
+        type:String,
+        required:[true, 'Confirm Password must match initial password']
     },
     bio:{
         type:String,
         required:false
     },
-    isAdmin:{
-        type:Boolean,
-        default:false
+    role:{
+        type:String,
+        enum:["user", "admin", "superadmin" ],
+        default:"user"
     },
     image:{
         type:String,
@@ -34,7 +39,7 @@ const userSchema = new mongoose.Schema({
     },
     createdAt:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     }
 
 })
