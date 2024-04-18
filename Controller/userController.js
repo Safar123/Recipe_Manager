@@ -17,12 +17,34 @@ try{
  
 }
 catch(err){
-        
+    res.status(400).json({
+        status:'fail',
+        message:err
+    })     
 }
 
 }
 
-exports.getSingleUser= (req,res)=>{
+exports.getSingleUser= async (req,res)=>{
+    try{
+        const singleUser = await User.findById(req.params.id);
+        if(!singleUser){
+            res.status(404).json({
+                status:'fail',
+                message:`No user with ${req.params.id}`
+            })
+        }
+        res.status(200).json({
+            status:'Success',
+            user:singleUser
+        })
+    }
+    catch(err){
+        res.status(400).json({
+            status:'fail',
+            message:err
+        })
+    }
     
 }
 
@@ -46,7 +68,32 @@ exports.createUser= async (req,res)=>{
 
 }
 
-exports.updateUser = (req,res)=>{
+exports.updateUser = async (req,res)=>{
+    try{
+        let changeUser= await User.findById(req.params.id)
+        if(!changeUser){
+            res.status(404).json({
+                status:'fail',
+                message:`No user exist for ${req.params.id}`
+            })
+        }
+        changeUser = await User.findByIdAndUpdate(changeUser.id, req.body ,{
+            new:true,
+            runValidators:true
+        })
+        res.status(201).json({
+            success:true,
+            data:{
+                updatedUser :changeUser
+            }
+        })
+    }
+    catch(err){
+        req.status(500).json({
+            status:'fail',
+            message:err
+        })
+    }
 
 }
 
