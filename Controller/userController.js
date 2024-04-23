@@ -1,8 +1,10 @@
 const User = require('../Model/userModel');
+const APIFeatures= require('../utils/apiFeatures');
 
 exports.getUser= async (req, res)=>{
 try{
-    const allUser = await User.find();
+    const features = new APIFeatures(User.find(), req.query).filter().paginate().limitFields().sort();
+    const allUser = await features.query;
     if (!allUser){
         res.status(200).json({
             status:'success',
@@ -19,7 +21,7 @@ try{
 catch(err){
     res.status(400).json({
         status:'fail',
-        message:err
+        message:err.message
     })     
 }
 
