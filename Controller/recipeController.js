@@ -1,32 +1,23 @@
 const Recipe = require('../Model/recipeModel');
+const APIFeatures= require('../utils/apiFeatures');
+
+
+exports.top5recipe = (req, res, next)=>{
+    req.query.limit='5';
+    req.query.sort='-cookingTime, avgRating';
+    req.query.fields='title, description, steps, productionCost',
+    next();
+}
 
 exports.getAllRecipe = async (req, res)=>{
 
     try{
-        const queryObj = {...req.query};
-        const excludedFields = ['page', 'sort', 'limit', 'fields'];
-        excludedFields.forEach(el => delete queryObj[el]);
-        let queryStr = JSON.stringify(queryObj)
-        queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, match=>`$${match}`);
-
-        let query = Recipe.find(JSON.parse(queryStr));
-if(req.query.sort){
-    const sortBy = req.query.sort().split(',').join(' ');
-    query = query.sort(sortBy);
-}
-else{
-    query =query.sort('-createdAt');
-}
-
-if(req.query.fields){
-    const fields = req.query.fields().split(',').join(' ');
-    query = query.select(fields);
-
-}
-else{
-    query =query.select('-__v');
-}
-        const allRecipe = await query;
+        const features = new APIFeatures(Recipe.find(), req.query)
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate();
+        const allRecipe = await features.query;
         if(!allRecipe || allRecipe.length === 0){
 
     res.status(404).json({
