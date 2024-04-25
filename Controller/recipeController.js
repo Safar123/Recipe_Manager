@@ -1,5 +1,7 @@
 const Recipe = require('../Model/recipeModel');
 const APIFeatures= require('../utils/apiFeatures');
+const catchAsync = require('../utils/catchAsyncError');
+const AppError = require('../utils/globalError');
 
 
 exports.top5recipe = (req, res, next)=>{
@@ -9,64 +11,36 @@ exports.top5recipe = (req, res, next)=>{
     next();
 }
 
-exports.getAllRecipe = async (req, res)=>{
+exports.getAllRecipe =catchAsync(async (req, res, next)=>{
 
-    try{
         const features = new APIFeatures(Recipe.find(), req.query)
         .filter()
         .sort()
         .limitFields()
         .paginate();
         const allRecipe = await features.query;
-        if(!allRecipe || allRecipe.length === 0){
-
-    res.status(404).json({
-        status:'success',
-        message: 'No recipe added yet'
-    })
-        }
-
         res.status(200).json({
             status:'success',
             recipes: allRecipe
         })
+})
 
-    }
-
-    catch(err){
-
-    }
-}
-
-exports.getSingleRecipe = async (req, res)=>{
-    try{
-
+exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
         const oneRecipe= await Recipe.findById(req.params.id);
         if(!oneRecipe){
-            res.status(404).json({
-                status:'fail',
-                message:`No such recipe for ${req.params.id}`
-            })
+          return next (new AppError(`Provided id ${req.params.id} is not valid`, 404));
         }
 
         res.status(200).json({
             status:'Success',
             recipe:oneRecipe
         })
-    }
-
-    catch(err){
-        res.status(500).json({
-            status:'fail',
-            message:err
-        })
-    }
-
+    
    
-}
+})
 
-exports.generateRecipe = async (req, res)=>{
-    try{
+exports.generateRecipe = catchAsync( async (req, res, next)=>{
+   
         const genRecipe = await Recipe.create(req.body);
         if(!req.body){
           res.status(400).json({
@@ -79,20 +53,10 @@ exports.generateRecipe = async (req, res)=>{
             status:'success',
             created_Recipe: genRecipe
         })
-        
-    }
-    catch(err){
-        res.status(500).json({
-            status:'fail',
-            message:' Something went wrong'
-        })
+    })
 
-    }
-   
-}
-
-exports.updateRecipe = async (req, res)=>{
-    try{
+exports.updateRecipe =catchAsync( async (req, res, next)=>{
+    
         let updateRecipe = await Recipe.findById(req.params.id);
         if(!updateRecipe || updateRecipe.length === 0){
             res.status(404).json({
@@ -105,18 +69,9 @@ exports.updateRecipe = async (req, res)=>{
             runValidators:true
         })
 
-    }
-    catch(err){
-        res.status(500).json({
-            status:'fail',
-            message:'Something went wrong'
-        })
-    }
-}
+})
 
-exports.removeRecipe = async (req,res)=>{
-
-    try{
+exports.removeRecipe = catchAsync(async (req,res, next)=>{
         let delRecipe = await Recipe.findById(req.params.id);
         if(!delRecipe || delRecipe.length === 0){
             res.status(404).json({
@@ -127,10 +82,4 @@ exports.removeRecipe = async (req,res)=>{
 
         delRecipe = await Recipe.findByIdAndDelete(delRecipe.id);
     }
-    catch (err){
-        res.status(500).json({
-            status:'fail',
-            message:err
-        })
-    }
-}
+)
