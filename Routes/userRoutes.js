@@ -20,7 +20,7 @@ const {
 
 const router = express.Router();
 
-router.route("/signUp").post(uploadUserImage, resizeUserImage, signUpUser);
+router.route("/signUp").post(uploadUserImage, resizeUserImage,signUpUser);
 
 router .route("/")
     .get(protectRoute, authorizationRoutes("admin", "superadmin"), getAllUser);
