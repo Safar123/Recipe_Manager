@@ -54,12 +54,13 @@ exports.signUpUser = catchAsync(async (req, res) => {
         return next(
             new GlobalError("Password must contain both number and letter", 401)
         );
+        
     }
     const newUser = await User.create({
         email: req.body.email,
         password: req.body.password,
         confirmPassword: req.body.confirmPassword,
-        userImage: req.file.filename,
+        
         role: req.body.role,
         bio:req.body.bio,
         username:req.body.username
