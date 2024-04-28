@@ -1,104 +1,81 @@
-const User = require('../Model/userModel');
-const APIFeatures= require('../utils/apiFeatures');
+const User = require("../Model/userModel");
+const GlobalError = require("../utils/globalError");
+const catchAsync = require("../utils/catchAsyncError");
 
-exports.getUser= async (req, res)=>{
-try{
-    const features = new APIFeatures(User.find(), req.query).filter().paginate().limitFields().sort();
-    const allUser = await features.query;
-    if (!allUser){
-        res.status(200).json({
-            status:'success',
-            message:'No user yet'
-        })
-    } 
+exports.getAllUser = catchAsync(async (req, res, next) => {
+    const allUser = await User.find();
+
+    if (!allUser || allUser.length === 0) {
+        return next(new GlobalError("No user listed yet", 404));
+    }
 
     res.status(200).json({
-        status:'success',
-        users: allUser
-    })
- 
-}
-catch(err){
-    res.status(400).json({
-        status:'fail',
-        message:err.message
-    })     
-}
+        success: true,
+        numberOfUser: allUser.length,
+        data: {
+            users: allUser,
+        },
+    });
+});
 
-}
-
-exports.getSingleUser= async (req,res)=>{
-    try{
-        const singleUser = await User.findById(req.params.id);
-        if(!singleUser){
-            res.status(404).json({
-                status:'fail',
-                message:`No user with ${req.params.id}`
-            })
-        }
-        res.status(200).json({
-            status:'Success',
-            user:singleUser
-        })
-    }
-    catch(err){
-        res.status(400).json({
-            status:'fail',
-            message:err
-        })
-    }
-    
-}
-
-exports.createUser= async (req,res)=>{
-    try{
-        const newUser= await User.create(req.body);
-        res.status(201).json({
-            status:'success',
-            data:{
-                user:newUser
-            }
-        })
-    }
-   catch(err){
-    res.status(400).json({
-        status:'fail',
-        message:err
-    })
-
-   }
-
-}
-
-exports.updateUser = async (req,res)=>{
-    try{
-        let changeUser= await User.findById(req.params.id)
-        if(!changeUser){
-            res.status(404).json({
-                status:'fail',
-                message:`No user exist for ${req.params.id}`
-            })
-        }
-        changeUser = await User.findByIdAndUpdate(changeUser.id, req.body ,{
-            new:true,
-            runValidators:true
-        })
-        res.status(201).json({
-            success:true,
-            data:{
-                updatedUser :changeUser
-            }
-        })
-    }
-    catch(err){
-        req.status(500).json({
-            status:'fail',
-            message:err
-        })
+exports.getSingleUser = catchAsync(async (req, res, next) => {
+    const findUser = await User.findById(req.params.id);
+    if (!findUser) {
+        return next(
+            new GlobalError(`User doesn't exist for ${req.params.id} ID`, 404)
+        );
     }
 
-}
+    res.status(200).json({
+        success: true,
+        data: {
+            user: findUser,
+        },
+    });
+});
 
-exports.deleteUser = (req,res)=>{
+exports.updateUserSelf = catchAsync(async (req, res, next) => {
+    let userDetail = await User.findById(req.params.id);
 
-}
+    if(req.user.id !==userDetail.id){
+        return next (new GlobalError('You can not update someone else information', 403))
+    }
+
+    if (!userDetail)
+        return next(
+            new GlobalError(`User doesn't exist for ${userDetail.id} ID`, 404)
+        );
+
+    userDetail = await User.findByIdAndUpdate(userDetail.id, req.body, {
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({
+        success: true,
+        data: {
+            user: userDetail,
+        },
+    });
+});
+
+exports.deleteUser = catchAsync(async (req, res, next) => {
+    const user = req.user;
+    if(user.id !==req.params.id && !user.role.includes('admin', 'superadmin')){
+
+        return next(new GlobalError('You cannot delete someone else information'), 403)
+    }
+
+    let removeUser = await User.findById(req.params.id);
+    if (!removeUser)
+        return next(
+            new GlobalError(`User doesn't exist for ${removeUser.id} ID`, 404)
+        );
+
+    removeUser = await User.findByIdAndUpdate(req.params.id,{active:false});
+
+    res.status(203).json({
+        success: true,
+        message: "User has been removed",
+    });
+});
