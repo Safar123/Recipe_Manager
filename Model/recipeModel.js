@@ -8,9 +8,12 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Recipe must have a description']
     },
+    instructions:{
+        type: String,
+        required: [true, 'Recipe must have a instruction']
+    },
     steps: {
         type: [String],
-        required: [true, 'Please define steps for your recipe']
     },
     images: {
         type: [String]
@@ -20,7 +23,6 @@ const recipeSchema = new mongoose.Schema({
     },
     prep_time: {
         type: Number,
-        required: [true, 'Please specify preparation time']
     },
     cookingTime: {
         type: Number,
@@ -28,14 +30,8 @@ const recipeSchema = new mongoose.Schema({
     },
     cookingTemp: {
         type: Number,
-        required: [true, 'Please specify cooking temperature']
     },
-    ingredients: [{
-        name: String,
-        quantity: Number,
-        unit: String,
-        cost: Number
-    }],
+    ingredients: [String],
 
     cost_per_serve: {
         type: Number
