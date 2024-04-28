@@ -3,18 +3,25 @@ const GlobalError = require("../utils/globalError");
 const catchAsync = require("../utils/catchAsyncError");
 
 exports.getAllUser = catchAsync(async (req, res, next) => {
-    const allUser = await User.find();
 
-    if (!allUser || allUser.length === 0) {
-        return next(new GlobalError("No user listed yet", 404));
-    }
-
-    res.status(200).json({
-        success: true,
-        numberOfUser: allUser.length,
-        data: {
-            users: allUser,
-        },
+    exports.getAllUser = catchAsync(async (req, res, next) => {
+        try {
+            const allUser = await User.find();
+    
+            if (!allUser || allUser.length === 0) {
+                return next(new GlobalError("No user listed yet", 404));
+            }
+    
+            res.status(200).json({
+                success: true,
+                numberOfUser: allUser.length,
+                data: {
+                    users: allUser,
+                },
+            });
+        } catch (error) {
+            return next(new GlobalError(`Error fetching users: ${error.message}`, 500));
+        }
     });
 });
 

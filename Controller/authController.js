@@ -49,25 +49,28 @@ exports.resizeUserImage = (req, res, next) => {
     next();
 };
 
-exports.signUpUser = catchAsync(async (req, res) => {
-    if (req.body.password.match(/^[a-zA-Z][0-9]$/)) {
-        return next(
-            new GlobalError("Password must contain both number and letter", 401)
-        );
+exports.signUpUser = catchAsync(async (req, res, next) => {
+    try {
+        console.log("signUpUser", req.body);
         
+        if (!req.body.password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
+            return next(
+                new GlobalError("Password must contain both number and letter", 401)
+            );
+        }
+        const newUser = await User.create({
+            email: req.body.email,
+            password: req.body.password,
+            name: req.body.fullname,
+            role: 'admin',
+            username: req.body.username
+        });
+
+        generateToken(newUser, 201, res)
+    } catch (error) {
+        console.log(error);
+        return next(new GlobalError(`Error creating user: ${error.message}`, 500));
     }
-    const newUser = await User.create({
-        email: req.body.email,
-        password: req.body.password,
-        confirmPassword: req.body.confirmPassword,
-        
-        role: req.body.role,
-        bio:req.body.bio,
-        username:req.body.username
-    });
-
-    generateToken(newUser,201,res)
-
 });
 
 //!Login function

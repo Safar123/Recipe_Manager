@@ -2,9 +2,18 @@ const GlobalError = require("./globalError");
 const jwt =require('jsonwebtoken');
 const { promisify } = require('util')
 
-exports.generateToken = (user,statusCode, res)=>{
+exports.generateToken = (user, statusCode, res)=>{
+    const SECRET_KEY = `${process.env.JWT_SECRET}`;
+    console.log('generateToken');
 
-    const token = user.webToken(user._id);
+    // const token = user.webToken(user._id, SECRET_KEY);
+    const token = jwt.sign({ id: user._id }, SECRET_KEY, {
+        expiresIn: '1h' // make sure JWT_EXPIRES_IN is defined in your environment
+    });
+
+    if(!token){
+        return next (new GlobalError('Generating token failed', 400))
+    }
 
     const cookieOption ={
         expires:new Date(Date.now()+ process.env.JWT_COOKIE_EXPIRE*24*60*60*1000),
@@ -17,10 +26,6 @@ exports.generateToken = (user,statusCode, res)=>{
 
     res.cookie('jwt', token, cookieOption)
 
-
-    if(!token){
-        return next (new GlobalError('Generating token failed', 400))
-    }
    res.status(statusCode).json({
     status:'success',
     token,
