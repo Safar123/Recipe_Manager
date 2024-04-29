@@ -55,31 +55,59 @@ exports.generateRecipe = catchAsync( async (req, res, next)=>{
         })
     })
 
-exports.updateRecipe =catchAsync( async (req, res, next)=>{
-    
-        let updateRecipe = await Recipe.findById(req.params.id);
-        if(!updateRecipe || updateRecipe.length === 0){
-            res.status(404).json({
-                status:'fail',
-                message:`No recipe by such ${req.params.id} id`
-            })
-        }
-        updateRecipe= await Recipe.findByIdAndUpdate(updateRecipe.id, req.body, {
-            new:true,
-            runValidators:true
-        })
-
-})
-
-exports.removeRecipe = catchAsync(async (req,res, next)=>{
-        let delRecipe = await Recipe.findById(req.params.id);
-        if(!delRecipe || delRecipe.length === 0){
-            res.status(404).json({
-                status:'fail',
-                message:`No such recipe by ${req.params.id} id`
-            })
-        }
-
-        delRecipe = await Recipe.findByIdAndDelete(delRecipe.id);
+exports.updateRecipe = catchAsync(async (req, res, next) => {
+    console.log('hit update recipie', req.body, req.params);
+    // Find the recipe by ID. If not found, immediately return a 404 error to the client.
+    const updateRecipe = await Recipe.findById(req.params.id);
+    if (!updateRecipe) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `No recipe found with ID ${req.params.id}`
+        });
     }
-)
+
+    // Update the recipe with the new data provided in the request body.
+    const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
+        new: true, // Return the modified document rather than the original.
+        runValidators: true // Ensure validators defined in the Schema are run.
+    });
+
+    // If no document is updated, handle it as a server error (unlikely to occur if the above check passes).
+    if (!updatedRecipe) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'The recipe could not be updated.'
+        });
+    }
+
+    // Return the updated recipe to the client.
+    res.status(200).json({
+        status: 'success',
+        data: {
+            recipe: updatedRecipe
+        }
+    });
+});
+
+// delete recipe from the server
+exports.removeRecipe = catchAsync(async (req, res, next) => {
+    // Try to find the recipe first
+    const delRecipe = await Recipe.findById(req.params.id);
+
+    // If no recipe is found, return a 404 error immediately and stop further execution
+    if (!delRecipe) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `No such recipe by ID ${req.params.id}`
+        });
+    }
+
+    // If a recipe is found, proceed to delete it
+    await Recipe.findByIdAndDelete(req.params.id);
+
+    // Send a success response after deleting the recipe
+    res.status(204).json({
+        status: 'success',
+        data: null // No need to send back any data
+    });
+});
