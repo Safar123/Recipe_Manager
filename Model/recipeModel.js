@@ -33,8 +33,7 @@ const recipeSchema = new mongoose.Schema({
     ingredients: [{
         name: String,
         quantity: Number,
-        unit: String,
-        cost: Number
+        unit: String
     }],
 
     cost_per_serve: {
@@ -45,7 +44,9 @@ const recipeSchema = new mongoose.Schema({
         default: Date.now
     },
     createdBy: {
-        type: String
+        type:mongoose.Schema.ObjectId,
+        ref:'User',
+        required:[true, 'You must log in to create recipe']
     }
 });
 
