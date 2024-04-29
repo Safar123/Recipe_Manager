@@ -28,7 +28,7 @@ exports.getAllRecipe =catchAsync(async (req, res, next)=>{
 exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
         const oneRecipe= await Recipe.findById(req.params.id);
         if(!oneRecipe){
-          return next (new AppError(`Provided id ${req.params.id} is not valid`, 404));
+          return next (new AppError(`Provided id ${req.params.id} is not found (or doesnt exist)`, 404));
         }
 
         res.status(200).json({
