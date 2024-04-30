@@ -18,6 +18,9 @@ const recipeSchema = new mongoose.Schema({
     images: {
         type: [String]
     },
+    featuredImgURL: {
+        type: String
+    },
     featuredImage: {
         type: String
     },
