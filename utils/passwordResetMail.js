@@ -13,7 +13,7 @@ const sendResetEmail =async options =>{
     });
 
     const mailOptions ={
-        from:'Saffar subedi <azajsbd111@gmail.com>',
+        from:'Recipe Manager Teams <saffar.subedi@cqumail.com>',
         to:options.email,
         subject:options.subject,
         text:options.message

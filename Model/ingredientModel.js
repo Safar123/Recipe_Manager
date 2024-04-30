@@ -6,9 +6,6 @@ const ingredientSchema = new mongoose.Schema({
         required:[true, 'Please specify ingredient name'],
         unique:true
     },
-    image:{
-        type:String
-    },
     CreatedAt:{
         type:Date,
         default:Date.now

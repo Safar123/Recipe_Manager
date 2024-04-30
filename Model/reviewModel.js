@@ -25,8 +25,24 @@ const reviewSchema = new mongoose.Schema({
         type:mongoose.Schema.ObjectId,
         ref:'User',
         required:[true, 'Only logged in user can add reviews']
-    }
+    } 
+},
+{
+    toJSON:{virtuals: true},
+    toObject:{virtuals:true}
+
 });
+
+reviewSchema.pre(/^find/, function (next){
+this.populate({
+    path:'recipe',
+    select:'title featuredImage'
+}).populate({
+    path:'user',
+    select: 'username userImage'
+})
+    next()
+})
 
 
 const Review = mongoose.model('Review', reviewSchema);
