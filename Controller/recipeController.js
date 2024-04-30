@@ -1,7 +1,61 @@
 const Recipe = require('../Model/recipeModel');
+const sharp = require('sharp');
 const APIFeatures= require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsyncError');
 const AppError = require('../utils/globalError');
+const multer = require('multer');
+
+const multerStorage = multer.memoryStorage();
+
+//image upload similar to user
+const multerFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith("image")) {
+        cb(null, true);
+    } else {
+        cb(
+            new GlobalError("Invalid file type. Please upload image only", 400),
+            false
+        );
+    }
+};
+
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter,
+});
+
+//multiple file for image array in recipes minimum of 1 file to maximum of 3
+exports.uploadRecipeImage = upload.fields([
+    {name:'featuredImgURL', maxCount:1},
+    {name:'images', maxCount:3}
+])
+
+exports.resizeRecipeImage =catchAsync( async (req, res, next) => {
+    if (!req.files.featuredImgURL || !req.files.images) return next();
+    const featuredImageUrlFilename = `recipe-${Math.floor(10)}-${Date.now()}-cover.jpeg` // for featured image
+
+   await sharp(req.files.featuredImgURL[0].buffer)
+        .resize(2000, 1333)
+        .toFormat("jpeg")
+        .jpeg({ quality: 90 })
+        .toFile(`public/images/recipes/${featuredImageUrlFilename}`);
+        req.body.featuredImgURL= featuredImageUrlFilename;
+      
+        req.body.images=[]; // images array
+        await Promise.all(
+            req.files.images.map(async (file, i)=>{
+                const filename = `recipe-${req.params.id}-${Date.now()}- ${i+1}.jpeg`;
+                await sharp(file.buffer)
+                .resize(2000, 1333)
+                .toFormat("jpeg")
+                .jpeg({ quality: 90 })
+                .toFile(`public/images/recipes/${filename}`);
+                req.body.images.push(filename)
+            })
+        )
+    next();
+});
+
 
 
 exports.top5recipe = (req, res, next)=>{
