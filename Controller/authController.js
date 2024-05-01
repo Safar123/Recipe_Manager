@@ -109,32 +109,47 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
         }
 
         if (!token) {
-            return next(new GlobalError('Authorization token not found', 401));
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Authorization token not found'
+            });
         }
 
         // Verify the token and decode its payload
         const decoded = await verifyToken(token);
         if (!decoded) {
-            return next(new GlobalError('Invalid or expired token', 401));
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Invalid or expired token'
+            });
         }
 
         // Check if the user exists
         const existUser = await User.findById(decoded.id);
         if (!existUser) {
-            return next(new GlobalError('User does not exist for the provided token', 401));
+            return res.status(401).json({
+                status: 'fail',
+                message: 'User does not exist for the provided token'
+            });
         }
-
 
         // Check if the user changed their password after the token was issued
         if (await existUser.checkIfPswdChanged(decoded.iat)) {
-            return next(new GlobalError('User has changed their password recently', 401));
+            return res.status(401).json({
+                status: 'fail',
+                message: 'User has changed their password recently'
+            });
         }
 
         // Attach user data to the request
         req.user = existUser;
         next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        next(new GlobalError('Authorization error', 401)); // Generic error for unexpected failures
+        console.error('Authorization error:', error); // Log the error for debugging
+        return res.status(401).json({
+            status: 'error',
+            message: 'Authorization error'
+        });
     }
 });
 
