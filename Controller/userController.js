@@ -7,11 +7,11 @@ exports.getAllUser = catchAsync(async (req, res, next) => {
     exports.getAllUser = catchAsync(async (req, res, next) => {
         try {
             const allUser = await User.find();
-    
+
             if (!allUser || allUser.length === 0) {
                 return next(new GlobalError("No user listed yet", 404));
             }
-    
+
             res.status(200).json({
                 success: true,
                 numberOfUser: allUser.length,
@@ -44,8 +44,8 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
 exports.updateUserSelf = catchAsync(async (req, res, next) => {
     let userDetail = await User.findById(req.params.id);
 
-    if(req.user.id !==userDetail.id){
-        return next (new GlobalError('You can not update someone else information', 403))
+    if (req.user.id !== userDetail.id) {
+        return next(new GlobalError('You can not update someone else information', 403))
     }
 
     if (!userDetail)
@@ -68,7 +68,7 @@ exports.updateUserSelf = catchAsync(async (req, res, next) => {
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
     const user = req.user;
-    if(user.id !==req.params.id && !user.role.includes('admin', 'superadmin')){
+    if (user.id !== req.params.id && !user.role.includes('admin', 'superadmin')) {
 
         return next(new GlobalError('You cannot delete someone else information'), 403)
     }
@@ -79,7 +79,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
             new GlobalError(`User doesn't exist for ${removeUser.id} ID`, 404)
         );
 
-    removeUser = await User.findByIdAndUpdate(req.params.id,{active:false});
+    removeUser = await User.findByIdAndUpdate(req.params.id, { active: false });
 
     res.status(203).json({
         success: true,

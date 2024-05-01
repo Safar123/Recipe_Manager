@@ -36,11 +36,16 @@ exports.generateToken = (user, statusCode, res)=>{
 }
 
 exports.verifyToken = async (vToken)=>{
+    try {
+        if (!vToken) {
+            throw new GlobalError('Token is missing', 401); // Missing token
+        }
 
-   const verified= await promisify(jwt.verify)(vToken, process.env.JWT_SECRET);
-   if(!verified){
-    return next(new GlobalError ('JWT token verification failed', 403))
-   }
+        const verified = await promisify(jwt.verify)(vToken, `${process.env.JWT_SECRET}`);
+        return verified;
 
-   return verified
+    } catch (error) {
+        console.error("Token verification failed:", error);
+        throw new GlobalError('JWT token verification failed', 403); // Verification failed
+    }
 }
