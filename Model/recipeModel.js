@@ -46,9 +46,7 @@ const recipeSchema = new mongoose.Schema({
     },
 
     foodType:{
-        type:String,
-        required:[true, 'Please provide your food type (indian, chinese, continental)']
-//this will help to quick search (like indian chinese )
+        type:String
     },
     difficulty:{
         type:String,
@@ -71,9 +69,12 @@ const recipeSchema = new mongoose.Schema({
     },
     createdBy: {
         type:mongoose.Schema.ObjectId,
-        ref:'User',
-        required:[true, 'You must log in to create recipe']
-    }
+        ref:'User'
+    },
+    favoritedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+    }]
 });
 
 recipeSchema.pre('save', function (next){

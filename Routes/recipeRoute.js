@@ -14,4 +14,7 @@ router.route('/:id')
 .delete(recipeController.removeRecipe)
 .get(recipeController.getSingleRecipe);
 
+router.route('/:recipeId/favorite').patch(recipeController.markAsFavorite);
+router.route('/favorites/:userId').get(recipeController.getUserFavorites);
+
 module.exports = router;

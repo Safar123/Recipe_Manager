@@ -77,8 +77,8 @@ exports.signUpUser = catchAsync(async (req, res, next) => {
 });
 
 //!Login function
-
 exports.logInUser = catchAsync(async (req, res, next) => {
+    // console.log("login", req.body);
     //!first to provide login function we need email and password from request body
     const { email, password } = req.body;
 
@@ -103,31 +103,60 @@ exports.logInUser = catchAsync(async (req, res, next) => {
 });
 
 exports.protectRoute = catchAsync(async (req, res, next) => {
-    let token;
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith("Bearer")
-    ) {
-        token = req.headers.authorization.split(" ")[1];
+    try {
+        // Extract Bearer token from headers
+        let token;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1]; // Extract token part
+        }
+
+        if (!token) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Authorization token not found'
+            });
+        }
+
+        // Verify the token and decode its payload
+        const decoded = await verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Invalid or expired token'
+            });
+        }
+
+        // Check if the user exists
+        const existUser = await User.findById(decoded.id);
+        if (!existUser) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'User does not exist for the provided token'
+            });
+        }
+
+        // Check if the user changed their password after the token was issued
+        if (await existUser.checkIfPswdChanged(decoded.iat)) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'User has changed their password recently'
+            });
+        }
+
+        // Attach user data to the request
+        req.user = existUser;
+        next(); // Proceed to the next middleware or route handler
+    } catch (error) {
+        console.error('Authorization error:', error); // Log the error for debugging
+        return res.status(401).json({
+            status: 'error',
+            message: 'Authorization error'
+        });
     }
-    //!checking if the signature is valid
-    const decoded = await verifyToken(token);
-
-    //!check if user exist
-    const existUser = await User.findById(decoded.id);
-
-    if (!existUser) {
-        return next(new GlobalError('User doesnt exist for the generated token. Please check credentials', 401))
-    }
-
-    //!check if user has changed password after token was generated
-    if (existUser.checkIfPswdChanged(decoded.iat)) {
-        return next(new GlobalError('User has changed password recently.', 401))
-    }
-
-    req.user = existUser;
-    next();
 });
+
+
 
 exports.authorizationRoutes = (...roles) => {
     return (req, res, next) => {
