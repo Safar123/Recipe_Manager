@@ -19,10 +19,8 @@ const recipeSchema = new mongoose.Schema({
         type: [String]
     },
     featuredImgURL: {
-        type: String
-    },
-    featuredImage: {
-        type: String
+        type: String,
+       required:[true, 'Please provide image for your recipe']
     },
     prep_time: {
         type: Number,
@@ -33,7 +31,7 @@ const recipeSchema = new mongoose.Schema({
     },
 
     timeToComplete:{
-        type:Number,
+        type:Number, // no need to be added from front end calculated automatically (helps to search and filter)
 
     },
     cookingTemp: {
@@ -49,17 +47,16 @@ const recipeSchema = new mongoose.Schema({
 
     foodType:{
         type:String
-        // required:[true, 'Please provide your food type (indian, chinese, continental)']
-
     },
     difficulty:{
         type:String,
         enum:['easy', 'medium', 'hard', 'pro']
+        //difficulty i will implement some logic to auto complete this field too (for search and filteration and creating quick links)
 
     },
 
     tags:{
-        type:[String]
+        type:[String] // can be anything like spicy asian traditional asthetic cusine desserts dinner meal anything
 
     },
     createdAt: {
@@ -67,7 +64,7 @@ const recipeSchema = new mongoose.Schema({
         default: Date.now
     },
     contentTime:{
-        type:Number
+        type:Number // auto filled but can be used in frontend to show how long it take to read about the article
 
     },
     createdBy: {
@@ -81,14 +78,15 @@ const recipeSchema = new mongoose.Schema({
 });
 
 recipeSchema.pre('save', function (next){
-this.timeToComplete = this.cookingTime + this.prep_time;
+this.timeToComplete = this.cookingTime + this.prep_time; // calculating total time
 next();
 })
 
 recipeSchema.pre('save', async function(next){
    const averageSpeed = 200;
-   const words = this.description.split(/\s+/).length +this.instructions.split(/\s+/).length
-    this.contentTime = Math.ceil(words/averageSpeed);
+   const word1 = await this.description.length + this.instructions.length+ this.title.length;
+
+    this.contentTime = Math.ceil(word1/averageSpeed); // calculating time to read articles
     next();
 })
 const Recipe = mongoose.model('Recipe', recipeSchema);

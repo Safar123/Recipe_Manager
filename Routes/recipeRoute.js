@@ -7,10 +7,10 @@ router.route('/top-5-recipe').get(recipeController.top5recipe, recipeController.
 
 router.route('/')
 .get(recipeController.getAllRecipe)
-.post(recipeController.generateRecipe);
+.post(recipeController.uploadRecipeImage, recipeController.resizeRecipeImage, recipeController.generateRecipe);
 
 router.route('/:id')
-.patch(recipeController.updateRecipe)
+.patch(recipeController.uploadRecipeImage, recipeController.resizeRecipeImage, recipeController.updateRecipe)
 .delete(recipeController.removeRecipe)
 .get(recipeController.getSingleRecipe);
 

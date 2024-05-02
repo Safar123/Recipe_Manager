@@ -19,6 +19,7 @@ const newObj = {};
 
 const multerStorage = multer.memoryStorage();
 
+//creating filter to validate file type(only image is allwowed)
 const multerFilter = (req, file, cb) => {
     if (file.mimetype.startsWith("image")) {
         cb(null, true);
@@ -30,24 +31,26 @@ const multerFilter = (req, file, cb) => {
     }
 };
 
+//middleware to implement file storage and type
 const upload = multer({
     storage: multerStorage,
     fileFilter: multerFilter,
 });
 
-exports.uploadUserImage = upload.single("userImage");
+//single is function to handle just single file for user profile only 1 image is enough
+exports.uploadUserImage = upload.single("userImage"); //userImage is field we define on user model
 
-exports.resizeUserImage = (req, res, next) => {
+exports.resizeUserImage =catchAsync( async (req, res, next) => {
     if (!req.file) return next();
-    req.file.filename = `NewUser-${Date.now()}-user.jpeg`;
+    req.file.filename = `NewUser-${Date.now()}-user.jpeg`; // creating unique filename
 
-    sharp(req.file.buffer)
+   await sharp(req.file.buffer)
         .resize(500, 500)
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
-        .toFile(`public/img/${req.file.filename}`);
+        .toFile(`public/img/users/${req.file.filename}`); // location of file in system
     next();
-};
+});
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
     try {
