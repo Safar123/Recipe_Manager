@@ -4,7 +4,6 @@ const { promisify } = require('util')
 
 exports.generateToken = (user, statusCode, res)=>{
     const SECRET_KEY = `${process.env.JWT_SECRET}`;
-    console.log('generateToken');
 
     // const token = user.webToken(user._id, SECRET_KEY);
     const token = jwt.sign({ id: user._id }, SECRET_KEY, {

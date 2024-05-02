@@ -75,7 +75,7 @@ exports.signUpUser = catchAsync(async (req, res, next) => {
 
 //!Login function
 exports.logInUser = catchAsync(async (req, res, next) => {
-    console.log("login", req.body);
+    // console.log("login", req.body);
     //!first to provide login function we need email and password from request body
     const { email, password } = req.body;
 

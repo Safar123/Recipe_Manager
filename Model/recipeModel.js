@@ -73,7 +73,11 @@ const recipeSchema = new mongoose.Schema({
     createdBy: {
         type:mongoose.Schema.ObjectId,
         ref:'User'
-    }
+    },
+    favoritedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+    }]
 });
 
 recipeSchema.pre('save', function (next){
