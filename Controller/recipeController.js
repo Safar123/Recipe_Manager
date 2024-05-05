@@ -183,15 +183,26 @@ exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
 exports.generateRecipe = catchAsync(async (req, res, next) => {
     console.log('Generating recipe', req.body);
 
-    // Check if the request body is empty or missing required fields
-    if (!req.body || !req.body.title || !req.body.ingredients) {
-        return res.status(400).json({
-            status: 'fail',
-            message: 'Please provide all the required information (* Required Field)'
-        });
-    }
-
     try {
+        // Parse ingredients if it's a string (stringified JSON array)
+        let parsedIngredients;
+        if (typeof ingredients === 'string') {
+            try {
+                parsedIngredients = JSON.parse(ingredients);
+            } catch (parseError) {
+                return res.status(400).json({
+                    status: 'fail',
+                    message: 'Invalid format for ingredients. Must be a JSON array.'
+                });
+            }
+        } else {
+            parsedIngredients = ingredients;
+        }
+
+        console.log(parsedIngredients);
+        // Add parsed ingredients to req.body
+        req.body.ingredients = parsedIngredients;
+
         // Attempt to create the recipe
         const genRecipe = await Recipe.create(req.body);
 
@@ -210,6 +221,7 @@ exports.generateRecipe = catchAsync(async (req, res, next) => {
     }
 });
 
+
 exports.updateRecipe = catchAsync(async (req, res, next) => {
     console.log('hit update recipie', req.body, req.params);
     // Find the recipe by ID. If not found, immediately return a 404 error to the client.
@@ -220,6 +232,27 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
             message: `No recipe found with ID ${req.params.id}`
         });
     }
+
+     // Parse ingredients if it's a string (stringified JSON array)
+     let parsedIngredients;
+     let ingredients = req.body.ingredients;
+     if (typeof ingredients === 'string') {
+         try {
+             parsedIngredients = JSON.parse(ingredients);
+         } catch (parseError) {
+            log.error(parseError);
+             return res.status(400).json({
+                 status: 'fail',
+                 message: 'Invalid format for ingredients. Must be a JSON array.'
+             });
+         }
+     } else {
+         parsedIngredients = ingredients;
+     }
+
+     console.log(parsedIngredients);
+     // Add parsed ingredients to req.body
+     req.body.ingredients = parsedIngredients;
 
     // Update the recipe with the new data provided in the request body.
     const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
