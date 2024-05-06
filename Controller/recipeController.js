@@ -185,6 +185,7 @@ exports.generateRecipe = catchAsync(async (req, res, next) => {
 
     try {
         // Parse ingredients if it's a string (stringified JSON array)
+        let ingredients = req.body?.ingredients;
         let parsedIngredients;
         if (typeof ingredients === 'string') {
             try {
