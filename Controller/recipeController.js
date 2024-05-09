@@ -101,9 +101,9 @@ exports.markAsFavorite = catchAsync(async (req, res) => {
 
 });
 
-exports.getUserFavorites = async (req, res, next) => {
+exports.getUserFavorites =catchAsync( async (req, res, next) => {
     console.log('getUserFavorites');
-    try {
+    
         const { userId } = req.params;
 
         // Find recipes where the userId exists in the 'favoritedBy' array
@@ -114,16 +114,12 @@ exports.getUserFavorites = async (req, res, next) => {
             results: favoriteRecipes.length,
             recipes: favoriteRecipes
         });
-    } catch (error) {
-        res.status(500).json({
-            status: 'fail',
-            message: error.message
-        });
-    }
-};
+   
+    
+});
 
 exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
-        const oneRecipe= await Recipe.findById(req.params.id);
+        const oneRecipe= await Recipe.findById(req.params.id).populate('reviews');
         if(!oneRecipe){
           return next (new AppError(`Provided id ${req.params.id} is not found (or doesnt exist)`, 404));
         }
@@ -140,10 +136,7 @@ exports.generateRecipe = catchAsync( async (req, res, next)=>{
    
         const genRecipe = await Recipe.create(req.body);
         if(!req.body){
-          res.status(400).json({
-            status:'fail',
-            message:'Please provide all the information required  (* Required Field)'
-          })
+          return next(new AppError (`Please provide all the required field to create recipe`, 400))
         }
 
         res.status(201).json({
@@ -157,10 +150,7 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
     // Find the recipe by ID. If not found, immediately return a 404 error to the client.
     const updateRecipe = await Recipe.findById(req.params.id);
     if (!updateRecipe) {
-        return res.status(404).json({
-            status: 'fail',
-            message: `No recipe found with ID ${req.params.id}`
-        });
+       return next (new AppError(` Recipe for provided ID: ${req.params.id} doesn't exist. Please check id before updating`, 404))
     }
 
     // Update the recipe with the new data provided in the request body.
@@ -171,10 +161,7 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
 
     // If no document is updated, handle it as a server error (unlikely to occur if the above check passes).
     if (!updatedRecipe) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'The recipe could not be updated.'
-        });
+     return next (new AppError(`Recipe with given ID: ${req.params.id} doesn't exist. Please check recipe ID` , 404))
     }
 
     // Return the updated recipe to the client.
@@ -193,10 +180,7 @@ exports.removeRecipe = catchAsync(async (req, res, next) => {
 
     // If no recipe is found, return a 404 error immediately and stop further execution
     if (!delRecipe) {
-        return res.status(404).json({
-            status: 'fail',
-            message: `No such recipe by ID ${req.params.id}`
-        });
+       return next (new AppError(`Recipe with given ID: ${req.params.id} doesn't exist. Please check recipe ID` , 404))
     }
 
     // If a recipe is found, proceed to delete it
