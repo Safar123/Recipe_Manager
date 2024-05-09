@@ -1,17 +1,14 @@
 const User = require("../Model/userModel");
-const GlobalError = require("../utils/globalError");
+const AppError = require("../utils/globalError");
 const catchAsync = require("../utils/catchAsyncError");
 
-exports.getAllUser = catchAsync(async (req, res, next) => {
 
     exports.getAllUser = catchAsync(async (req, res, next) => {
-        try {
+      
             const allUser = await User.find();
-
             if (!allUser || allUser.length === 0) {
-                return next(new GlobalError("No user listed yet", 404));
+                return next(new AppError("No user listed yet", 404));
             }
-
             res.status(200).json({
                 success: true,
                 numberOfUser: allUser.length,
@@ -19,17 +16,15 @@ exports.getAllUser = catchAsync(async (req, res, next) => {
                     users: allUser,
                 },
             });
-        } catch (error) {
-            return next(new GlobalError(`Error fetching users: ${error.message}`, 500));
-        }
+        
     });
-});
+
 
 exports.getSingleUser = catchAsync(async (req, res, next) => {
     const findUser = await User.findById(req.params.id);
     if (!findUser) {
         return next(
-            new GlobalError(`User doesn't exist for ${req.params.id} ID`, 404)
+            new AppError(`User doesn't exist for ${req.params.id} ID`, 404)
         );
     }
 
@@ -45,12 +40,12 @@ exports.updateUserSelf = catchAsync(async (req, res, next) => {
     let userDetail = await User.findById(req.params.id);
 
     if (req.user.id !== userDetail.id) {
-        return next(new GlobalError('You can not update someone else information', 403))
+        return next(new AppError('You can not update someone else information', 403))
     }
 
     if (!userDetail)
         return next(
-            new GlobalError(`User doesn't exist for ${userDetail.id} ID`, 404)
+            new AppError(`User doesn't exist for ${userDetail.id} ID`, 404)
         );
 
     userDetail = await User.findByIdAndUpdate(userDetail.id, req.body, {
@@ -70,13 +65,13 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     const user = req.user;
     if (user.id !== req.params.id && !user.role.includes('admin', 'superadmin')) {
 
-        return next(new GlobalError('You cannot delete someone else information'), 403)
+        return next(new AppError('You cannot delete someone else information'), 403)
     }
 
     let removeUser = await User.findById(req.params.id);
     if (!removeUser)
         return next(
-            new GlobalError(`User doesn't exist for ${removeUser.id} ID`, 404)
+            new AppError(`User doesn't exist for ${removeUser.id} ID`, 404)
         );
 
     removeUser = await User.findByIdAndUpdate(req.params.id, { active: false });

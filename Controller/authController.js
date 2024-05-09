@@ -2,21 +2,17 @@ const crypto = require('crypto')
 const User = require("../Model/userModel");
 const catchAsync = require("../utils/catchAsyncError");
 const AppError = require("../utils/globalError");
-const sharp = require("sharp");
-const multer = require("multer");
 const {generateToken, verifyToken} = require('../utils/jwtTokenHandler');
 const sendResetEmail = require('../utils/passwordResetMail');
-
-
+const sharp = require("sharp");
+const multer = require("multer");
 
 const filterObj =(obj, ...fields)=>{
 const newObj = {};
     Object.keys(obj).forEach(el=>{
         if(fields.includes(el)) newObj[el] = obj[el]
     })
-
-    return newObj;
-        
+  return newObj;      
 }
 
 const multerStorage = multer.memoryStorage();
@@ -44,15 +40,16 @@ exports.uploadUserImage = upload.single("userImage"); //userImage is field we de
 
 exports.resizeUserImage =catchAsync( async (req, res, next) => {
     if (!req.file) return next();
-    req.file.filename = `NewUser-${Date.now()}-user.jpeg`; // creating unique filename
+   req.file.filename = `UserProfile-${Date.now()}-${req.user.id}-user.jpeg`; // creating unique filename
 
    await sharp(req.file.buffer)
         .resize(500, 500)
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
-        .toFile(`public/img/users/${req.file.filename}`); // location of file in system
+        .toFile(`public/images/users/${req.file.filename}`) // location of file in system
     next();
 });
+
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
        
@@ -276,6 +273,7 @@ exports.updateMe = catchAsync(async (req,res,next)=>{
     }
 
     const filteredBody = filterObj(req.body, 'email'  ) 
+    if(req.file) filteredBody.userImage = req.file.filename
     const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new:true,
         runValidators:true
@@ -283,5 +281,10 @@ exports.updateMe = catchAsync(async (req,res,next)=>{
     if(!user){
         return next (new AppError('No user found for email'),404)
     }
+
+    res.status(200).json({
+        status:'success',
+        updatedUser: user
+    })
 
 })
