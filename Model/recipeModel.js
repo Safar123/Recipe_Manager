@@ -12,15 +12,13 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Recipe must have a instruction']
     },
-    steps: {
-        type: [String],
-    },
+    
     images: {
         type: [String]
     },
     featuredImgURL: {
         type: String,
-       required:[true, 'Please provide image for your recipe']
+        required:[true, 'Please provide image for your recipe']
     },
     prep_time: {
         type: Number,
@@ -75,11 +73,23 @@ const recipeSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     }]
+
+}, 
+{
+    toJSON:{virtuals:true},
+    toObject:{virtuals:true}
 });
 
 recipeSchema.pre('save', function (next){
 this.timeToComplete = this.cookingTime + this.prep_time; // calculating total time
 next();
+})
+
+//Virtual populate 
+recipeSchema.virtual('reviews', {
+    ref:'Review',
+    foreignField: 'recipe',
+    localField: '_id'
 })
 
 recipeSchema.pre('save', async function(next){
