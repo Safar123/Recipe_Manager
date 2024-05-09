@@ -1,7 +1,9 @@
 const express= require('express');
 const reviewController = require('../Controller/reviewController');
 const authController = require('../Controller/authController');
-const router = express.Router()
+
+//nested routes for posting reviews that use "/api/v1/recipe/:recipeId/reviwes"
+const router = express.Router({mergeParams:true})
 
 
 router.route('/')
@@ -10,4 +12,4 @@ router.route('/')
 
 
 
-module.exports = router;
+module.exports = router; 
