@@ -26,6 +26,7 @@ router.route('/:id')
 router.route('/:recipeId/favorite').patch(recipeController.markAsFavorite);
 router.route('/favorites/:userId').get(recipeController.getUserFavorites);
 
+router.route('/images/:filename').get(recipeController.getRecipeImage);
 
 
 module.exports = router;

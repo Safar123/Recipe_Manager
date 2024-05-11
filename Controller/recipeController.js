@@ -1,13 +1,13 @@
 const Recipe = require('../Model/recipeModel');
 const sharp = require('sharp');
+const path = require('path');
 const APIFeatures= require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsyncError');
 const AppError = require('../utils/globalError');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 const multerStorage = multer.memoryStorage();
-
-//image upload similar to user
 const multerFilter = (req, file, cb) => {
     if (file.mimetype.startsWith("image")) {
         cb(null, true);
@@ -26,36 +26,80 @@ const upload = multer({
 
 //multiple file for image array in recipes minimum of 1 file to maximum of 3
 exports.uploadRecipeImage = upload.fields([
-    {name:'featuredImgURL', maxCount:1},
+    {name:'featuredImage', maxCount:1},
     {name:'images', maxCount:3}
 ])
 
-exports.resizeRecipeImage =catchAsync( async (req, res, next) => {
-    if (!req.files.featuredImgURL || !req.files.images) return next();
-    const featuredImageUrlFilename = `recipe-${Math.floor(10)}-${Date.now()}-cover.jpeg` // for featured image
-
-   await sharp(req.files.featuredImgURL[0].buffer)
-        .resize(2000, 1333)
-        .toFormat("jpeg")
-        .jpeg({ quality: 90 })
-        .toFile(`public/images/recipes/${featuredImageUrlFilename}`);
-        req.body.featuredImgURL= featuredImageUrlFilename;
-      
-        req.body.images=[]; // images array
-        await Promise.all(
-            req.files.images.map(async (file, i)=>{
-                const filename = `recipe-${req.params.id}-${Date.now()}- ${i+1}.jpeg`;
-                await sharp(file.buffer)
+exports.resizeRecipeImage = catchAsync(async (req, res, next) => {
+    try {
+        if (req.files.featuredImage) {
+          const featuredImageFilename = `${uuidv4()}-cover.jpeg`;
+    
+          await sharp(req.files.featuredImage[0].buffer)
+            .resize(2000, 1333)
+            .toFormat('jpeg')
+            .jpeg({ quality: 90 })
+            .toFile(`public/images/recipes/${featuredImageFilename}`);
+    
+        //   req.body.featuredImage = featuredImageFilename;
+          req.body.featuredImgURL = featuredImageFilename;
+        }
+    
+        if (req.files.images) {
+          req.body.imagesURL = [];
+          await Promise.all(
+            req.files.images.map(async (file, i) => {
+              const filename = `${uuidv4()}-${i + 1}.jpeg`;
+              await sharp(file.buffer)
                 .resize(2000, 1333)
-                .toFormat("jpeg")
+                .toFormat('jpeg')
                 .jpeg({ quality: 90 })
                 .toFile(`public/images/recipes/${filename}`);
-                req.body.images.push(filename)
+    
+              req.body.imagesURL.push(filename);
             })
-        )
-    next();
+          );
+        }
+    
+        next();
+      } catch (error) {
+        console.error(error);
+        return next(error);
+      }
 });
 
+exports.getRecipeImage = catchAsync(async (req, res) => {
+    // console.log(req.params.filename, "getImage");
+    try {
+        const filename = req.params.filename;
+        const imagePath = path.join(__dirname, '../public/images/recipes', filename);
+
+        res.sendFile(imagePath, (err) => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    console.error("File not found:", imagePath);
+                    res.status(404).json({
+                        status: 'fail',
+                        message: 'File not found'
+                    });
+                } else {
+                    console.error("Error sending file:", err);
+                    res.status(500).json({
+                        status: 'fail',
+                        message: 'An internal server error occurred'
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error handling request:", error);
+        res.status(500).json({
+            status: 'fail',
+            message: 'An internal server error occurred'
+        });
+    }
+    
+});
 
 
 exports.top5recipe = (req, res, next)=>{
@@ -101,9 +145,9 @@ exports.markAsFavorite = catchAsync(async (req, res) => {
 
 });
 
-exports.getUserFavorites =catchAsync( async (req, res, next) => {
-    console.log('getUserFavorites');
-    
+exports.getUserFavorites = async (req, res, next) => {
+    // console.log('getUserFavorites');
+    try {
         const { userId } = req.params;
 
         // Find recipes where the userId exists in the 'favoritedBy' array
@@ -114,9 +158,11 @@ exports.getUserFavorites =catchAsync( async (req, res, next) => {
             results: favoriteRecipes.length,
             recipes: favoriteRecipes
         });
-   
+    } catch (err) {
+        console.error(err);
+    }
     
-});
+};
 
 exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
         const oneRecipe= await Recipe.findById(req.params.id).populate('reviews');
@@ -132,18 +178,48 @@ exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
    
 })
 
-exports.generateRecipe = catchAsync( async (req, res, next)=>{
-   
-        const genRecipe = await Recipe.create(req.body);
-        if(!req.body){
-          return next(new AppError (`Please provide all the required field to create recipe`, 400))
+exports.generateRecipe = catchAsync(async (req, res, next) => {
+    console.log('Generating recipe', req.body);
+
+    try {
+        // Parse ingredients if it's a string (stringified JSON array)
+        let ingredients = req.body?.ingredients;
+        let parsedIngredients;
+        if (typeof ingredients === 'string') {
+            try {
+                parsedIngredients = JSON.parse(ingredients);
+            } catch (parseError) {
+                return res.status(400).json({
+                    status: 'fail',
+                    message: 'Invalid format for ingredients. Must be a JSON array.'
+                });
+            }
+        } else {
+            parsedIngredients = ingredients;
         }
 
+        console.log(parsedIngredients);
+        // Add parsed ingredients to req.body
+        req.body.ingredients = parsedIngredients;
+
+        // Attempt to create the recipe
+        const genRecipe = await Recipe.create(req.body);
+
+        // Return a success response
         res.status(201).json({
-            status:'success',
+            status: 'success',
             created_Recipe: genRecipe
-        })
-    })
+        });
+    } catch (error) {
+        // Handle database or other errors
+        console.error('Error generating recipe:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'An error occurred while generating the recipe.'
+        });
+    }
+});
+
 
 exports.updateRecipe = catchAsync(async (req, res, next) => {
     console.log('hit update recipie', req.body, req.params);
@@ -152,6 +228,27 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
     if (!updateRecipe) {
        return next (new AppError(` Recipe for provided ID: ${req.params.id} doesn't exist. Please check id before updating`, 404))
     }
+
+     // Parse ingredients if it's a string (stringified JSON array)
+     let parsedIngredients;
+     let ingredients = req.body.ingredients;
+     if (typeof ingredients === 'string') {
+         try {
+             parsedIngredients = JSON.parse(ingredients);
+         } catch (parseError) {
+            log.error(parseError);
+             return res.status(400).json({
+                 status: 'fail',
+                 message: 'Invalid format for ingredients. Must be a JSON array.'
+             });
+         }
+     } else {
+         parsedIngredients = ingredients;
+     }
+
+     console.log(parsedIngredients);
+     // Add parsed ingredients to req.body
+     req.body.ingredients = parsedIngredients;
 
     // Update the recipe with the new data provided in the request body.
     const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {

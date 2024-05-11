@@ -12,13 +12,14 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Recipe must have a instruction']
     },
-    
-    images: {
-        type: [String]
+    steps: {
+        type: [String],
     },
     featuredImgURL: {
-        type: String,
-        required:[true, 'Please provide image for your recipe']
+        type: String
+    },
+    imagesURL: {
+        type: [String]
     },
     prep_time: {
         type: Number,
