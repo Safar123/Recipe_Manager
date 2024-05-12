@@ -52,49 +52,64 @@ exports.resizeUserImage =catchAsync( async (req, res, next) => {
 
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
-       
-        if (!req.body.password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
-            return next(
-                new AppError("Password must contain both number and letter", 401)
-            );
-        }
-        const newUser = await User.create({
-            email: req.body.email,
-            password: req.body.password,
-            confirmPassword:req.body.confirmPassword,
-          
-        });
-        generateToken(newUser, 201, res);
-
-        if(!newUser){
-            return next (new AppError(`Something went wrong while signing up. Please check user credintials`, 400) )
-        }
+    const { email, password, confirmPassword } = req.body;
+    
+    if (!password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
+        return next(new AppError("Password must contain both number and letter", 401));
+    }
+    
+    if (password !== confirmPassword) {
+        return next(new AppError("Passwords do not match", 401));
+    }
+    
+    const user = await User.findOne({ email });
+    
+    if (user) {
+        return next(new AppError("Email already exists", 401)); 
+    }
+    
+    const newUser = await User.create({ email, password });
+    
+    if (!newUser) {
+        return next(new AppError(`Something went wrong while signing up. Please check user credentials`, 400));
+    }
+    
+    res.status(201).json({
+        success: true,
+        message: 'Your account has been created successfully',
+    });
     
 });
 
 //!Login function
 exports.logInUser = catchAsync(async (req, res, next) => {
-    // console.log("login", req.body);
-    //!first to provide login function we need email and password from request body
-    const { email, password } = req.body;
+    try {
+        //!first to provide login function we need email and password from request body
+        const { email, password } = req.body;
 
-    //!check we have both emil and password
-    if (!email || !password) {
-        return next(new AppError("Email and Password is required field", 401));
-    }
-    //!then we need to check if email is registered or not
-    const user = await User.findOne({ email }).select("+password");
+        //!check we have both emil and password
+        if (!email || !password) {
+            return next(new AppError("Email and Password is required field", 401));
+        }
+        //!then we need to check if email is registered or not
+        const user = await User.findOne({ email }).select("+password");
 
-    //!function to compre user input pwd with encrypted password in database
-    if (!user || !(await user.checkPwdEncryption(password, user.password))) {
-        return next(
-            new AppError(
-                "Either email or password didnt match user credentials",
-                401
-            )
-        );
+        //!function to compre user input pwd with encrypted password in database
+        if (!user || !(await user.checkPwdEncryption(password, user.password))) {
+            return next(
+                new AppError(
+                    "Either email or password didnt match user credentials",
+                    401
+                )
+            );
+        }
+
+        generateToken(user,200,res)
+
+    } catch (e) {
+        console.error(e);
     }
- generateToken(user,200,res)
+
  
 });
 

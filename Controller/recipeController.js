@@ -110,17 +110,21 @@ exports.top5recipe = (req, res, next)=>{
 }
 
 exports.getAllRecipe =catchAsync(async (req, res, next)=>{
-
+    try {
         const features = new APIFeatures(Recipe.find(), req.query)
         .filter()
         .sort()
         .limitFields()
         .paginate();
         const allRecipe = await features.query;
+        // console.log(allRecipe);
         res.status(200).json({
             status:'success',
             recipes: allRecipe
         })
+    } catch (err) {
+        console.error(err);
+    }
 })
 
 exports.markAsFavorite = catchAsync(async (req, res) => {
