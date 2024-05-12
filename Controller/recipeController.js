@@ -226,7 +226,7 @@ exports.generateRecipe = catchAsync(async (req, res, next) => {
 
 
 exports.updateRecipe = catchAsync(async (req, res, next) => {
-    console.log('hit update recipie', req.body, req.params);
+    // console.log('hit update recipie', req.body, req.params);
     // Find the recipe by ID. If not found, immediately return a 404 error to the client.
     const updateRecipe = await Recipe.findById(req.params.id);
     if (!updateRecipe) {
@@ -255,10 +255,16 @@ exports.updateRecipe = catchAsync(async (req, res, next) => {
      req.body.ingredients = parsedIngredients;
 
     // Update the recipe with the new data provided in the request body.
-    const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
+     const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
+        $push: {
+          imagesURL: {
+            $each: req.body.imagesURL
+          }
+        }
+      }, {
         new: true, // Return the modified document rather than the original.
         runValidators: true // Ensure validators defined in the Schema are run.
-    });
+      });
 
     // If no document is updated, handle it as a server error (unlikely to occur if the above check passes).
     if (!updatedRecipe) {
