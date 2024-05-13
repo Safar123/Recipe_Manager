@@ -10,7 +10,7 @@ router.route('/top-5-recipe').get(recipeController.top5recipe, recipeController.
 router.use('/:recipeId/reviews', reviewRouter);
 
 router.route('/')
-.get(authController.protectRoute, recipeController.getAllRecipe)
+.get(recipeController.getAllRecipe)
 .post(authController.protectRoute, 
     recipeController.uploadRecipeImage, 
     recipeController.resizeRecipeImage, 
@@ -25,6 +25,9 @@ router.route('/:id')
 
 router.route('/:recipeId/favorite').patch(recipeController.markAsFavorite);
 router.route('/favorites/:userId').get(recipeController.getUserFavorites);
+
+router.route('/myrecipe/:userId').get(recipeController.getUserRecipes);
+
 
 router.route('/images/:filename').get(recipeController.getRecipeImage);
 

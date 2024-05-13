@@ -84,6 +84,7 @@ exports.signUpUser = catchAsync(async (req, res, next) => {
 //!Login function
 exports.logInUser = catchAsync(async (req, res, next) => {
     try {
+        console.log('auth', req.headers.authorization);
         //!first to provide login function we need email and password from request body
         const { email, password } = req.body;
 
@@ -115,12 +116,15 @@ exports.logInUser = catchAsync(async (req, res, next) => {
 
 exports.protectRoute = catchAsync(async (req, res, next) => {
     try {
+
         // Extract Bearer token from headers
         let token;
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1]; // Extract token part
         }
+
+        // console.log('token: ' + token);
 
         if (!token) {
             return res.status(401).json({

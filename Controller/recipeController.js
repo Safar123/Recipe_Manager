@@ -168,6 +168,23 @@ exports.getUserFavorites = async (req, res, next) => {
     
 };
 
+exports.getUserRecipes = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        // Find recipes where the 'createdBy' field equals the userId
+        const userRecipes = await Recipe.find({ createdBy: userId });
+
+        res.status(200).json({
+            status: 'success',
+            results: userRecipes.length,
+            recipes: userRecipes
+        });
+    } catch (err) {
+        console.error(err);
+    }
+};
+
 exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
         const oneRecipe= await Recipe.findById(req.params.id).populate('reviews');
         if(!oneRecipe){
