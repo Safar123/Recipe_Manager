@@ -21,19 +21,28 @@ const catchAsync = require("../utils/catchAsyncError");
 
 
 exports.getSingleUser = catchAsync(async (req, res, next) => {
-    const findUser = await User.findById(req.params.id);
-    if (!findUser) {
-        return next(
-            new AppError(`User doesn't exist for ${req.params.id} ID`, 404)
-        );
-    }
+    try {
+        const { id } = req.params;
 
-    res.status(200).json({
-        success: true,
-        data: {
-            user: findUser,
-        },
-    });
+
+        const findUser = await User.findById(id);
+        if (!findUser) {
+            return next(
+                new AppError(`User doesn't exist for ${id} ID`, 404)
+            );
+        }
+
+        console.log('getSingleUser', findUser);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                user: findUser,
+            },
+        });
+    } catch (e) {
+        console.error(e);
+    }
 });
 
 exports.updateUserSelf = catchAsync(async (req, res, next) => {
