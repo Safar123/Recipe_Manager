@@ -53,6 +53,7 @@ if (!req.file) return next();
 
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
+    try {
     const { email, password, confirmPassword } = req.body;
     
     if (!password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
@@ -79,6 +80,9 @@ exports.signUpUser = catchAsync(async (req, res, next) => {
         success: true,
         message: 'Your account has been created successfully',
     });
+} catch (err) {
+    console.log(err);
+}
     
 });
 
@@ -293,7 +297,7 @@ exports.updateMe = catchAsync(async (req,res,next)=>{
             return next(new AppError('To update your password follow "/updatePassword" '))
         }
 
-        const filteredBody = filterObj(req.body, 'email', 'bio') 
+        const filteredBody = filterObj(req.body, 'email', 'bio', 'name', 'username') 
 
 
         if(req.file) filteredBody.userImage = req.file.filename
