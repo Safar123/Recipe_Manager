@@ -132,6 +132,7 @@ exports.markAsFavorite = catchAsync(async (req, res) => {
         const { recipeId } = req.params;
         const userId = req.query.userId;
 
+       
         const recipe = await Recipe.findById(recipeId);
         if (!recipe) {
             return res.status(404).json({ message: 'Recipe not found' });
@@ -140,17 +141,16 @@ exports.markAsFavorite = catchAsync(async (req, res) => {
         if (!recipe.favoritedBy.includes(userId)) {
             recipe.favoritedBy.push(userId);
             await recipe.save();
-            res.status(200).json({ message: 'Marked as favorite' });
+            return res.status(200).json({ message: 'Marked as favorite' });
         } else {
-            recipe.favoritedBy = recipe.favoritedBy.filter(id => id !== userId);
+            recipe.favoritedBy = recipe.favoritedBy.filter(id => !id.equals(userId));
             await recipe.save();
-            res.status(200).json({ message: 'Unmarked as favorite' });
+            return res.status(200).json({ message: 'Unmarked as favorite' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error marking recipe as favorite' });
+        console.error('Error marking recipe as favorite:', error);
+        return res.status(500).json({ message: 'Error marking recipe as favorite' });
     }
-
 });
 
 exports.getUserFavorites = async (req, res, next) => {
