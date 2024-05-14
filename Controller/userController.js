@@ -1,6 +1,7 @@
 const User = require("../Model/userModel");
 const AppError = require("../utils/globalError");
 const catchAsync = require("../utils/catchAsyncError");
+const path = require('path');
 
 
     exports.getAllUser = catchAsync(async (req, res, next) => {
@@ -24,7 +25,6 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
     try {
         const { id } = req.params;
 
-
         const findUser = await User.findById(id);
         if (!findUser) {
             return next(
@@ -43,6 +43,40 @@ exports.getSingleUser = catchAsync(async (req, res, next) => {
     } catch (e) {
         console.error(e);
     }
+});
+
+
+exports.getUserImage = catchAsync(async (req, res) => {
+    // console.log(req.params.filename, "getImage");
+    try {
+        const filename = req.params.filename;
+        const imagePath = path.join(__dirname, '../public/images/users', filename);
+
+        res.sendFile(imagePath, (err) => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    console.error("File not found:", imagePath);
+                    res.status(404).json({
+                        status: 'fail',
+                        message: 'File not found'
+                    });
+                } else {
+                    console.error("Error sending file:", err);
+                    res.status(500).json({
+                        status: 'fail',
+                        message: 'An internal server error occurred'
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error handling request:", error);
+        res.status(500).json({
+            status: 'fail',
+            message: 'An internal server error occurred'
+        });
+    }
+    
 });
 
 exports.updateUserSelf = catchAsync(async (req, res, next) => {

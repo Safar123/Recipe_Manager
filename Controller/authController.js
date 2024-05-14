@@ -38,8 +38,9 @@ const upload = multer({
 //single is function to handle just single file for user profile only 1 image is enough
 exports.uploadUserImage = upload.single("userImage"); //userImage is field we define on user model
 
-exports.resizeUserImage =catchAsync( async (req, res, next) => {
-    if (!req.file) return next();
+exports.resizeUserImage = catchAsync( async (req, res, next) => {
+if (!req.file) return next();
+    console.log(req.file.filename, "userfilename");
    req.file.filename = `UserProfile-${Date.now()}-${req.user.id}-user.jpeg`; // creating unique filename
 
    await sharp(req.file.buffer)
@@ -286,24 +287,30 @@ exports.updatePassword = catchAsync(async(req,res,next)=>{
 })
 
 exports.updateMe = catchAsync(async (req,res,next)=>{
+    try {
 
-    if(req.body.password|| req.body.confirmPassword){
-        return next(new AppError('To update your password follow "/updatePassword" '))
+        if(req.body.password || req.body.confirmPassword){
+            return next(new AppError('To update your password follow "/updatePassword" '))
+        }
+
+        const filteredBody = filterObj(req.body, 'email', 'bio') 
+
+
+        if(req.file) filteredBody.userImage = req.file.filename
+        const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+            new:true,
+            runValidators:true
+        });
+        if(!user){
+            return next (new AppError('No user found for email'),404)
+        }
+
+        res.status(200).json({
+            status:'success',
+            updatedUser: user
+        })
+    } catch (err) {
+        console.error(err);
     }
-
-    const filteredBody = filterObj(req.body, 'email'  ) 
-    if(req.file) filteredBody.userImage = req.file.filename
-    const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-        new:true,
-        runValidators:true
-    });
-    if(!user){
-        return next (new AppError('No user found for email'),404)
-    }
-
-    res.status(200).json({
-        status:'success',
-        updatedUser: user
-    })
 
 })

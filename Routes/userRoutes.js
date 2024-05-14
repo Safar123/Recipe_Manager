@@ -16,6 +16,7 @@ const {
     getSingleUser,
     updateUserSelf,
     deleteUser,
+    getUserImage
    
 } = require("../Controller/userController");
 
@@ -26,7 +27,9 @@ router.route("/signup").post(signUpUser);
 
 router.route("/") .get(protectRoute, authorizationRoutes("admin", "superadmin"), getAllUser);
 
- router.patch("/updateMe", protectRoute, uploadUserImage ,resizeUserImage , updateMe);
+router.patch("/updateMe", protectRoute, uploadUserImage, resizeUserImage, updateMe);
+router.route('/images/:filename').get(getUserImage);
+
 
 router .route("/:id")
     .get(protectRoute, getSingleUser)

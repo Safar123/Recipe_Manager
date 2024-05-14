@@ -6,7 +6,7 @@ const crypto =require('crypto')
 
 
 const userSchema = new mongoose.Schema({
-    fullname: {
+    name: {
         type: String,
         lowercase: true,
         trim: true,
