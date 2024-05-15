@@ -80,6 +80,7 @@ exports.getUserImage = catchAsync(async (req, res) => {
 });
 
 exports.updateUserSelf = catchAsync(async (req, res, next) => {
+    console.log('updateur', req.user)
     let userDetail = await User.findById(req.params.id);
 
     if (req.user.id !== userDetail.id) {
@@ -111,17 +112,22 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
         if (!removeUser) {
             return next(new AppError(`User doesn't exist for ${id} ID`, 404));
         }
-
-        if (!(removeUser.role.includes('admin') || removeUser.role.includes('superadmin'))) {
+    
+        // Check if the requesting user is an admin
+        if (req.user.role.includes('admin') || req.user.role.includes('superadmin')) {
+            // If the user to be deleted is not an admin, delete it
+            if (!(removeUser.role.includes('admin') || removeUser.role.includes('superadmin'))) {
+                removeUser = await User.findByIdAndUpdate(id, { active: false });
+                res.status(200).json({
+                    success: true,
+                    message: "User has been removed",
+                });
+            } else {
+                return next(new AppError('You cannot delete another admin', 403));
+            }
+        } else {
             return next(new AppError('You cannot delete someone else information', 403));
         }
-
-        removeUser = await User.findByIdAndUpdate(id, { active: false });
-
-        res.status(200).json({
-            success: true,
-            message: "User has been removed",
-        });
     } catch (err) {
         console.error(err);
     }

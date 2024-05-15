@@ -54,7 +54,7 @@ if (!req.file) return next();
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
     try {
-    const { email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
     
     if (!password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
         return next(new AppError("Password must contain both number and letter", 401));
@@ -70,7 +70,7 @@ exports.signUpUser = catchAsync(async (req, res, next) => {
         return next(new AppError("Email already exists", 401)); 
     }
     
-    const newUser = await User.create({ email, password });
+    const newUser = await User.create({ name, email, password });
     
     if (!newUser) {
         return next(new AppError(`Something went wrong while signing up. Please check user credentials`, 400));
@@ -292,6 +292,7 @@ exports.updatePassword = catchAsync(async(req,res,next)=>{
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   try {
+    console.log(req.body, 'updateMe')
     if (req.body.password || req.body.confirmPassword) {
       return next(new AppError('To update your password follow "/updatePassword" '))
     }
