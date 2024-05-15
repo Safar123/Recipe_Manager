@@ -290,31 +290,35 @@ exports.updatePassword = catchAsync(async(req,res,next)=>{
    
 })
 
-exports.updateMe = catchAsync(async (req,res,next)=>{
-    try {
-
-        if(req.body.password || req.body.confirmPassword){
-            return next(new AppError('To update your password follow "/updatePassword" '))
-        }
-
-        const filteredBody = filterObj(req.body, 'email', 'bio', 'name', 'username') 
-
-
-        if(req.file) filteredBody.userImage = req.file.filename
-        const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-            new:true,
-            runValidators:true
-        });
-        if(!user){
-            return next (new AppError('No user found for email'),404)
-        }
-
-        res.status(200).json({
-            status:'success',
-            updatedUser: user
-        })
-    } catch (err) {
-        console.error(err);
+exports.updateMe = catchAsync(async (req, res, next) => {
+  try {
+    if (req.body.password || req.body.confirmPassword) {
+      return next(new AppError('To update your password follow "/updatePassword" '))
     }
 
+    const filteredBody = filterObj(req.body, 'email', 'bio', 'name', 'username', 'userId')
+
+    if (req.file) filteredBody.userImage = req.file.filename
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: filteredBody.email })
+    if (existingUser && existingUser._id.toString() !== req.body.userId) {
+      return next(new AppError('Email already exists', 400))
+    }
+
+    const user = await User.findByIdAndUpdate(req.body.userId, filteredBody, {
+      new: true,
+      runValidators: true
+    })
+    if (!user) {
+      return next(new AppError('No user found for email', 404))
+    }
+
+    res.status(200).json({
+      status: 'success',
+      updatedUser: user
+    })
+  } catch (err) {
+    console.error(err)
+  }
 })
