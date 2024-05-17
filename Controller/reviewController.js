@@ -4,9 +4,10 @@ const AppError = require('../utils/globalError');
 
 
 exports.createReview = catchAsync(async (req,res,next)=>{
+    console.log('createReview');
 
-    if(!req.body.recipe) req.body.recipe = req.params.recipeId;
-    if(!req.body.user) req.body.user = req.user.id;
+    if(!req.body.recipe) req.body.recipe = req.body.recipeId;
+    if(!req.body.user) req.body.user = req.body.userId;
 
     const newReview = await Review.create(req.body);
     res.status(201).json({
@@ -29,6 +30,6 @@ exports.getReview = catchAsync(async(req,res, next)=>{
     res.status(200).json({
         status:'success',
         number:reviews.length,
-        review:reviews
+        data:reviews
     })
 })
