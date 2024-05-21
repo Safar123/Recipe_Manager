@@ -43,9 +43,9 @@ const recipeSchema = new mongoose.Schema({
     cost_per_serve: {
         type: Number
     },
-
-    foodType:{
-        type:String
+    category: {
+        type:mongoose.Schema.ObjectId,
+        ref: 'Category',
     },
     difficulty:{
         type:String,
