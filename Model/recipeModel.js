@@ -12,7 +12,6 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Recipe must have a instruction']
     },
-<<<<<<< HEAD
 
     averageRating:{
         type:Number
@@ -26,10 +25,6 @@ default:0
     
     images: {
         type: [String]
-=======
-    steps: {
-        type: [String],
->>>>>>> ec955c041b5d9f23c2bda55b4b333972ea3f1fa8
     },
     featuredImgURL: {
         type: String
