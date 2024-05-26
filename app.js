@@ -2,14 +2,32 @@ const express = require ('express');
 const morgan = require('morgan');
 const GlobalError = require('./utils/globalError');
 const errorHandler = require('./Controller/errorController');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize= require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp')
 
 const app = express();
+app.use(helmet());
+
+const limiter = rateLimit({
+    max:100,
+    windowMs:60*60*1000,
+    message:'Too many request from this IP. Please try an hour later'
+})
+
+app.use('/api', limiter);
 app.use(express.json());
+
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
 
 const userRoute = require('./Routes/userRoutes');
 const recipeRoute = require('./Routes/recipeRoute');
 const reviewRoute = require('./Routes/reviewRoutes');
-const categoryRoute = require('./Routes/categoryRoute');
+const categoryRoute = require('./Routes/categoryRoutes');
 
 
 if (process.env.NODE_ENV ==='development'){
