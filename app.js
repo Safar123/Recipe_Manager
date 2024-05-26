@@ -9,6 +9,7 @@ app.use(express.json());
 const userRoute = require('./Routes/userRoutes');
 const recipeRoute = require('./Routes/recipeRoute');
 const reviewRoute = require('./Routes/reviewRoutes');
+const categoryRoute = require('./Routes/categoryRoutes');
 
 if (process.env.NODE_ENV ==='development'){
     app.use(morgan('dev'));
@@ -17,6 +18,7 @@ if (process.env.NODE_ENV ==='development'){
 app.use('/api/v1/user', userRoute);
 app.use('/api/v1/recipe', recipeRoute);
 app.use('/api/v1/reviews', reviewRoute);
+app.use('/api/v1/category', categoryRoute);
 
 app.all('*', (req, res, next)=>{
     next(new GlobalError(`This ${req.originalUrl} link is not defined on this server`, 404));
