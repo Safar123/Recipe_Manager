@@ -38,8 +38,9 @@ const upload = multer({
 //single is function to handle just single file for user profile only 1 image is enough
 exports.uploadUserImage = upload.single("userImage"); //userImage is field we define on user model
 
-exports.resizeUserImage =catchAsync( async (req, res, next) => {
-    if (!req.file) return next();
+exports.resizeUserImage = catchAsync( async (req, res, next) => {
+if (!req.file) return next();
+    console.log(req.file.filename, "userfilename");
    req.file.filename = `UserProfile-${Date.now()}-${req.user.id}-user.jpeg`; // creating unique filename
 
    await sharp(req.file.buffer)
@@ -52,60 +53,83 @@ exports.resizeUserImage =catchAsync( async (req, res, next) => {
 
 
 exports.signUpUser = catchAsync(async (req, res, next) => {
-       
-        if (!req.body.password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
-            return next(
-                new AppError("Password must contain both number and letter", 401)
-            );
-        }
-        const newUser = await User.create({
-            email: req.body.email,
-            password: req.body.password,
-            confirmPassword:req.body.confirmPassword,
-          
-        });
-        generateToken(newUser, 201, res);
-
-        if(!newUser){
-            return next (new AppError(`Something went wrong while signing up. Please check user credintials`, 400) )
-        }
+    try {
+    const { name, email, password, confirmPassword } = req.body;
+    
+    if (!password.match(/^(?=.*[a-zA-Z])(?=.*[0-9]).*$/)) {
+        return next(new AppError("Password must contain both number and letter", 401));
+    }
+    
+    if (password !== confirmPassword) {
+        return next(new AppError("Passwords do not match", 401));
+    }
+    
+    const user = await User.findOne({ email });
+    
+    if (user) {
+        return next(new AppError("Email already exists", 401)); 
+    }
+    
+    const newUser = await User.create({ name, email, password });
+    
+    if (!newUser) {
+        return next(new AppError(`Something went wrong while signing up. Please check user credentials`, 400));
+    }
+    
+    res.status(201).json({
+        success: true,
+        message: 'Your account has been created successfully',
+    });
+} catch (err) {
+    console.log(err);
+}
     
 });
 
 //!Login function
 exports.logInUser = catchAsync(async (req, res, next) => {
-    // console.log("login", req.body);
-    //!first to provide login function we need email and password from request body
-    const { email, password } = req.body;
+    try {
+        console.log('auth', req.headers.authorization);
+        //!first to provide login function we need email and password from request body
+        const { email, password } = req.body;
 
-    //!check we have both emil and password
-    if (!email || !password) {
-        return next(new AppError("Email and Password is required field", 401));
-    }
-    //!then we need to check if email is registered or not
-    const user = await User.findOne({ email }).select("+password");
+        //!check we have both emil and password
+        if (!email || !password) {
+            return next(new AppError("Email and Password is required field", 401));
+        }
+        //!then we need to check if email is registered or not
+        const user = await User.findOne({ email }).select("+password");
 
-    //!function to compre user input pwd with encrypted password in database
-    if (!user || !(await user.checkPwdEncryption(password, user.password))) {
-        return next(
-            new AppError(
-                "Either email or password didnt match user credentials",
-                401
-            )
-        );
+        //!function to compre user input pwd with encrypted password in database
+        if (!user || !(await user.checkPwdEncryption(password, user.password))) {
+            return next(
+                new AppError(
+                    "Either email or password didnt match user credentials",
+                    401
+                )
+            );
+        }
+
+        generateToken(user,200,res)
+
+    } catch (e) {
+        console.error(e);
     }
- generateToken(user,200,res)
+
  
 });
 
 exports.protectRoute = catchAsync(async (req, res, next) => {
     try {
+
         // Extract Bearer token from headers
         let token;
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1]; // Extract token part
         }
+
+        // console.log('token: ' + token);
 
         if (!token) {
             return res.status(401).json({
@@ -266,25 +290,36 @@ exports.updatePassword = catchAsync(async(req,res,next)=>{
    
 })
 
-exports.updateMe = catchAsync(async (req,res,next)=>{
-
-    if(req.body.password|| req.body.confirmPassword){
-        return next(new AppError('To update your password follow "/updatePassword" '))
+exports.updateMe = catchAsync(async (req, res, next) => {
+  try {
+    console.log(req.body, 'updateMe')
+    if (req.body.password || req.body.confirmPassword) {
+      return next(new AppError('To update your password follow "/updatePassword" '))
     }
 
-    const filteredBody = filterObj(req.body, 'email'  ) 
-    if(req.file) filteredBody.userImage = req.file.filename
-    const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-        new:true,
-        runValidators:true
-    });
-    if(!user){
-        return next (new AppError('No user found for email'),404)
+    const filteredBody = filterObj(req.body, 'email', 'bio', 'name', 'username', 'userId')
+
+    if (req.file) filteredBody.userImage = req.file.filename
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: filteredBody.email })
+    if (existingUser && existingUser._id.toString() !== req.body.userId) {
+      return next(new AppError('Email already exists', 400))
+    }
+
+    const user = await User.findByIdAndUpdate(req.body.userId, filteredBody, {
+      new: true,
+      runValidators: true
+    })
+    if (!user) {
+      return next(new AppError('No user found for email', 404))
     }
 
     res.status(200).json({
-        status:'success',
-        updatedUser: user
+      status: 'success',
+      updatedUser: user
     })
-
+  } catch (err) {
+    console.error(err)
+  }
 })

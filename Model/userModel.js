@@ -6,6 +6,11 @@ const crypto =require('crypto')
 
 
 const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        lowercase: true,
+        trim: true,
+    },
    
     username: {
         type: String,
@@ -31,15 +36,15 @@ const userSchema = new mongoose.Schema({
 
     confirmPassword: {
         type: String,
-        required: [true, "Confirm password must match the initial password"],
-        validate: {
-            //*compare confirmpassword with password. Function allow us to validate and pass message
-            validator: function (el) {
-                return el === this.password;
-            },
-        },
+        // required: [true, "Confirm password must match the initial password"],
+        // validate: {
+        //     //*compare confirmpassword with password. Function allow us to validate and pass message
+        //     validator: function (el) {
+        //         return el === this.password;
+        //     },
+        // },
 
-        message: "Password did not match",
+        // message: "Password did not match",
     },
 
     userImage: {

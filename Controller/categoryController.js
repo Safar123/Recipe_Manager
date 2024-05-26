@@ -4,20 +4,20 @@ const AppError = require('../utils/globalError');
 
 
 exports.createCategory = catchAsync(async (req,res,next)=>{
+    console.log('cate');
 
-    const newCategory = await Category.create(req.body);
+    const newCat = await Category.create(req.body);
     res.status(201).json({
         status:'success',
-        review:newCategory
+        review:newCat
     })
-    if(!newCategory){
+    if(!newCat){
         return next (new AppError(' Something went wrong while posting your review', 400))
     }
 });
 
 
-exports.getAllCategory = catchAsync(async(req,res, next)=>{
-
+exports.getCategories = catchAsync(async(req,res, next)=>{
     const categories = await Category.find();
 
     res.status(200).json({
@@ -40,7 +40,6 @@ exports.getSingleCategory = catchAsync(async (req, res,next)=>{
 
 
 })
-
 
 exports.updateCategory = catchAsync(async (req, res,next)=>{
     let upCat= await Category.findById(req.params.id);

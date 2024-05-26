@@ -7,8 +7,11 @@ const router = express.Router({mergeParams:true})
 
 
 router.route('/')
-.get(reviewController.getReview)
 .post(authController.protectRoute, reviewController.createReview);
+
+router.route('/:recipeId')
+.get(authController.protectRoute, reviewController.getReview)
+
 
 
 
