@@ -292,7 +292,7 @@ exports.updatePassword = catchAsync(async(req,res,next)=>{
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   try {
-    console.log(req.body, 'updateMe')
+   
     if (req.body.password || req.body.confirmPassword) {
       return next(new AppError('To update your password follow "/updatePassword" '))
     }

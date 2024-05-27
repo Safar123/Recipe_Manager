@@ -21,6 +21,7 @@
   "homepage": "https://github.com/Safar123/Recipe_Manager#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "csurf": "^1.11.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-mongo-sanitize": "^2.2.0",
