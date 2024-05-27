@@ -9,10 +9,10 @@ exports.createCategory = catchAsync(async (req,res,next)=>{
     const newCat = await Category.create(req.body);
     res.status(201).json({
         status:'success',
-        review:newCat
+        category:newCat
     })
     if(!newCat){
-        return next (new AppError(' Something went wrong while posting your review', 400))
+        return next (new AppError(' Something went wrong while creating your category', 400))
     }
 });
 
