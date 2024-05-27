@@ -5,7 +5,6 @@ const categorySchema = new mongoose.Schema({
         type:String,
         required:[true, 'Please specify category name'],
         unique:true,
-        default: 'uncategorized'
     },
     description: String,
     CreatedAt:{

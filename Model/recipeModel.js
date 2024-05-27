@@ -12,8 +12,19 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Recipe must have a instruction']
     },
-    steps: {
-        type: [String],
+
+    averageRating:{
+        type:Number
+
+    },
+
+    numberOfRatings:{
+type:Number,
+default:0
+    },
+    
+    images: {
+        type: [String]
     },
     featuredImgURL: {
         type: String
@@ -50,7 +61,7 @@ const recipeSchema = new mongoose.Schema({
     difficulty:{
         type:String,
         enum:['easy', 'medium', 'hard', 'pro']
-        //difficulty i will implement some logic to auto complete this field too (for search and filteration and creating quick links)
+        //difficulty  will implement some logic to auto complete this field too (for search and filteration and creating quick links)
 
     },
 
