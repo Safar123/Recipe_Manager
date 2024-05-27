@@ -109,9 +109,9 @@ exports.top5recipe = (req, res, next)=>{
     next();
 }
 
-exports.getAllRecipe =catchAsync(async (req, res, next)=>{
+exports.getAllRecipe = catchAsync(async (req, res, next)=>{
     try {
-        const features = new APIFeatures(Recipe.find(), req.query)
+        const features = new APIFeatures(Recipe.find().populate('category'), req.query)
         .filter()
         .sort()
         .limitFields()
@@ -190,7 +190,7 @@ exports.getUserRecipes = async (req, res, next) => {
 };
 
 exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
-        const oneRecipe= await Recipe.findById(req.params.id).populate('reviews');
+        const oneRecipe = await Recipe.findById(req.params.id).populate('reviews');
         if(!oneRecipe){
           return next (new AppError(`Provided id ${req.params.id} is not found (or doesnt exist)`, 404));
         }
@@ -199,7 +199,6 @@ exports.getSingleRecipe = catchAsync(async (req, res,next)=>{
             status:'Success',
             recipe:oneRecipe
         })
-    
    
 })
 
