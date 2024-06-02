@@ -6,7 +6,7 @@ const AppError = require('../utils/globalError');
 exports.createReview = catchAsync(async (req,res,next)=>{
     //console.log('createReview');
 
-    if(!req.body.recipe) req.body.recipe = req.params.recipeId;
+    if(!req.body.recipe) req.body.recipe = req.body.recipeId;
     if(!req.body.user) req.body.user = req.user;
 
     const newReview = await Review.create(req.body);
